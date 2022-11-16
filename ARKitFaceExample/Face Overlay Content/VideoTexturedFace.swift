@@ -21,21 +21,26 @@ class VideoTexturedFace: TexturedFace {
         #error("ARKit is not supported in iOS Simulator. Connect a physical iOS device and select it as your Xcode run destination, or select Generic iOS Device as a build-only destination.")
         #else
         // Show video texture as the diffuse material and disable lighting.
-        let faceGeometry = ARSCNFaceGeometry(device: sceneView.device!, fillMesh: true)!
+        let faceGeometry = ARSCNFaceGeometry(device: sceneView.device!, fillMesh: false)!
         let material = faceGeometry.firstMaterial!
         material.diffuse.contents = sceneView.scene.background.contents
         material.lightingModel = .constant
 
-        guard let shaderURL = Bundle.main.url(forResource: "VideoTexturedFace", withExtension: "shader"),
-            let modifier = try? String(contentsOf: shaderURL)
-            else { fatalError("Can't load shader modifier from bundle.") }
-        faceGeometry.shaderModifiers = [ .geometry: modifier]
+
+        let program = SCNProgram()
+        program.vertexFunctionName = "VideoTextureVertex"
+        program.fragmentFunctionName = "VideoTextureFragment"
+        faceGeometry.program = program
+
+        faceGeometry.setValue(material.diffuse, forKey: "diffuseTexture")
 
         // Pass view-appropriate image transform to the shader modifier so
         // that the mapped video lines up correctly with the background video.
         let affineTransform = frame.displayTransform(for: .portrait, viewportSize: sceneView.bounds.size)
         let transform = SCNMatrix4(affineTransform)
-        faceGeometry.setValue(SCNMatrix4Invert(transform), forKey: "displayTransform")
+        var finalTransform = matrix_float4x4(SCNMatrix4Invert(transform))
+        let data = Data(bytes: &finalTransform, count: MemoryLayout<matrix_float4x4>.stride)
+        faceGeometry.setValue(data, forKey: "displayTransform")
 
         contentNode = SCNNode(geometry: faceGeometry)
         #endif
