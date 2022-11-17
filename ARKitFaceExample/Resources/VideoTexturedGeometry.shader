@@ -1,11 +1,3 @@
-/*
- <samplecode>
- <abstract>
- SceneKit shader (geometry) modifier for texture mapping ARKit camera video onto the face.
- </abstract>
- </samplecode>
- */
-
 #pragma arguments
 float4x4 displayTransform // from ARFrame.displayTransform(for:viewportSize:)
 
@@ -32,6 +24,3 @@ _geometry.texcoords[0] = transformedVertex.xy;
 /**
  * MARK: Post-process special effects
  */
-
-// Make head appear big. (You could also apply other geometry modifications here.)
-_geometry.position.xyz *= 1.5;

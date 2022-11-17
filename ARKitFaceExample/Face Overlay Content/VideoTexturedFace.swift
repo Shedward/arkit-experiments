@@ -26,13 +26,10 @@ class VideoTexturedFace: TexturedFace {
         material.diffuse.contents = sceneView.scene.background.contents
         material.lightingModel = .constant
 
-
-        let program = SCNProgram()
-        program.vertexFunctionName = "VideoTextureVertex"
-        program.fragmentFunctionName = "VideoTextureFragment"
-        faceGeometry.program = program
-
-        faceGeometry.setValue(material.diffuse, forKey: "diffuseTexture")
+        faceGeometry.shaderModifiers = [
+            .geometry: loadShaderModifier(named: "VideoTexturedGeometry"),
+            .fragment: loadShaderModifier(named: "VideoTexturedFragment")
+        ]
 
         // Pass view-appropriate image transform to the shader modifier so
         // that the mapped video lines up correctly with the background video.
@@ -45,6 +42,17 @@ class VideoTexturedFace: TexturedFace {
         contentNode = SCNNode(geometry: faceGeometry)
         #endif
         return contentNode
+    }
+
+    private func loadShaderModifier(named: String) -> String {
+        guard let fileUrl = Bundle.main.url(forResource: named, withExtension: "shader") else {
+            fatalError("File not found")
+        }
+        guard let shader = try? String(contentsOf: fileUrl) else {
+            fatalError("Failed to load")
+        }
+
+        return shader
     }
     
 }
